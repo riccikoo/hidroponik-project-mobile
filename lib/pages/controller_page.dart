@@ -72,7 +72,7 @@ class _ControllerPageState extends State<ControllerPage> {
         title: Text(title),
         trailing: Switch(
           value: value,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           onChanged: onChanged,
         ),
       ),

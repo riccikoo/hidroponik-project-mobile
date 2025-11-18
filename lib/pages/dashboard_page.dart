@@ -74,10 +74,20 @@ class _DashboardPageState extends State<DashboardPage> {
             valueWidget: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('🌡️ ${temperature.toStringAsFixed(1)} °C',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('💧 ${humidity.toStringAsFixed(1)} %',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  '🌡️ ${temperature.toStringAsFixed(1)} °C',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '💧 ${humidity.toStringAsFixed(1)} %',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             chart: _buildDhtChart(),
@@ -87,8 +97,10 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: Icons.wb_sunny,
             title: 'LDR — Intensitas Cahaya',
             color: Colors.amber[800]!,
-            valueWidget: Text('${ldr.toStringAsFixed(0)} Lux',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            valueWidget: Text(
+              '${ldr.toStringAsFixed(0)} Lux',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             chart: _buildLdrChart(),
           ),
 
@@ -96,8 +108,10 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: Icons.water_drop,
             title: 'pH Sensor',
             color: Colors.green,
-            valueWidget: Text('${ph.toStringAsFixed(2)} pH',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            valueWidget: Text(
+              '${ph.toStringAsFixed(2)} pH',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             chart: _buildPhChart(),
           ),
 
@@ -105,8 +119,10 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: Icons.science,
             title: 'EC Sensor (Konsentrasi Nutrisi)',
             color: Colors.blueAccent,
-            valueWidget: Text('${ec.toStringAsFixed(2)} mS/cm',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            valueWidget: Text(
+              '${ec.toStringAsFixed(2)} mS/cm',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             chart: _buildEcChart(),
           ),
 
@@ -114,8 +130,10 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: Icons.water,
             title: 'Level Air',
             color: Colors.teal,
-            valueWidget: Text('${waterLevel.toStringAsFixed(1)} %',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            valueWidget: Text(
+              '${waterLevel.toStringAsFixed(1)} %',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             chart: _buildLevelChart(),
           ),
         ],
@@ -134,7 +152,7 @@ class _DashboardPageState extends State<DashboardPage> {
       margin: const EdgeInsets.only(bottom: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
-      shadowColor: color.withOpacity(0.4),
+      shadowColor: color.withValues(alpha: 0.4),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -147,7 +165,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: Colors.blueGrey,
@@ -210,41 +228,41 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildLdrChart() {
     return _simpleChart(Colors.amber[800]!, [
-      FlSpot(0, 300),
-      FlSpot(1, 400),
-      FlSpot(2, 500),
-      FlSpot(3, 450),
-      FlSpot(4, 480),
+      const FlSpot(0, 300),
+      const FlSpot(1, 400),
+      const FlSpot(2, 500),
+      const FlSpot(3, 450),
+      const FlSpot(4, 480),
     ]);
   }
 
   Widget _buildPhChart() {
     return _simpleChart(Colors.green, [
-      FlSpot(0, 6.4),
-      FlSpot(1, 6.6),
-      FlSpot(2, 6.7),
-      FlSpot(3, 6.8),
-      FlSpot(4, 6.7),
+      const FlSpot(0, 6.4),
+      const FlSpot(1, 6.6),
+      const FlSpot(2, 6.7),
+      const FlSpot(3, 6.8),
+      const FlSpot(4, 6.7),
     ]);
   }
 
   Widget _buildEcChart() {
     return _simpleChart(Colors.blueAccent, [
-      FlSpot(0, 1.1),
-      FlSpot(1, 1.2),
-      FlSpot(2, 1.3),
-      FlSpot(3, 1.25),
-      FlSpot(4, 1.4),
+      const FlSpot(0, 1.1),
+      const FlSpot(1, 1.2),
+      const FlSpot(2, 1.3),
+      const FlSpot(3, 1.25),
+      const FlSpot(4, 1.4),
     ]);
   }
 
   Widget _buildLevelChart() {
     return _simpleChart(Colors.teal, [
-      FlSpot(0, 80),
-      FlSpot(1, 82),
-      FlSpot(2, 83),
-      FlSpot(3, 81),
-      FlSpot(4, 84),
+      const FlSpot(0, 80),
+      const FlSpot(1, 82),
+      const FlSpot(2, 83),
+      const FlSpot(3, 81),
+      const FlSpot(4, 84),
     ]);
   }
 
@@ -259,7 +277,10 @@ class _DashboardPageState extends State<DashboardPage> {
             isCurved: true,
             color: color,
             barWidth: 3,
-            belowBarData: BarAreaData(show: true, color: color.withOpacity(0.2)),
+            belowBarData: BarAreaData(
+              show: true,
+              color: color.withValues(alpha: 0.2),
+            ),
             spots: spots,
           ),
         ],
