@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'profile_page.dart';
 import 'controller_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import '../models/sensor_model.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -11,15 +15,57 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  List<SensorData> allSensors = [];
+  static const String baseUrl = 'http://localhost:5000/api';
+
+  double temperature = 0;
+  double humidity = 0;
+  double ldr = 0;
+  double ph = 0;
+  double ec = 0;
+  double waterLevel = 0;
+
   int _selectedIndex = 0;
 
-  // Simulasi data sensor (nanti bisa diganti dari API / MQTT)
-  double temperature = 29.3;
-  double humidity = 63.5;
-  double ldr = 420;
-  double ph = 6.7;
-  double ec = 1.3;
-  double waterLevel = 82;
+  @override
+  void initState() {
+    super.initState();
+    fetchSensorData();
+    Timer.periodic(Duration(seconds: 5), (timer) => fetchSensorData());
+  }
+
+  Future<void> fetchSensorData() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/get_sensor_data"),
+      );
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body)['data'];
+
+        setState(() {
+          allSensors = data.map((e) => SensorData.fromJson(e)).toList();
+
+          temperature = _getValue('dht_temp');
+          humidity = _getValue('dht_humid');
+          ldr = _getValue('ldr');
+          ph = _getValue('ph');
+          ec = _getValue('ec');
+          waterLevel = _getValue('ultrasonic');
+        });
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  double _getValue(String sensorName) {
+    try {
+      return allSensors.firstWhere((s) => s.sensorName == sensorName).value;
+    } catch (_) {
+      return 0;
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -44,8 +90,8 @@ class _DashboardPageState extends State<DashboardPage> {
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
         selectedItemColor: Colors.blue,
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.wifi), label: 'Kontrol'),
@@ -67,26 +113,21 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 20),
 
+          // DHT Temperature & Humidity
           _buildSensorCard(
             icon: Icons.thermostat,
-            title: 'DHT11 — Suhu & Kelembapan',
+            title: "DHT — Suhu & Kelembapan",
             color: Colors.orange,
             valueWidget: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '🌡️ ${temperature.toStringAsFixed(1)} °C',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  "🌡️ ${temperature.toStringAsFixed(1)} °C",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '💧 ${humidity.toStringAsFixed(1)} %',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  "💧 ${humidity.toStringAsFixed(1)} %",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -95,46 +136,108 @@ class _DashboardPageState extends State<DashboardPage> {
 
           _buildSensorCard(
             icon: Icons.wb_sunny,
-            title: 'LDR — Intensitas Cahaya',
-            color: Colors.amber[800]!,
+            title: "LDR – Cahaya",
+            color: Colors.amber,
             valueWidget: Text(
-              '${ldr.toStringAsFixed(0)} Lux',
+              "${ldr.toStringAsFixed(0)} Lux",
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            chart: _buildLdrChart(),
+            chart: _simpleDynamicChart("ldr", Colors.amber),
           ),
 
           _buildSensorCard(
             icon: Icons.water_drop,
-            title: 'pH Sensor',
+            title: "pH Sensor",
             color: Colors.green,
             valueWidget: Text(
-              '${ph.toStringAsFixed(2)} pH',
+              ph.toStringAsFixed(2),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            chart: _buildPhChart(),
+            chart: _simpleDynamicChart("ph", Colors.green),
           ),
 
           _buildSensorCard(
             icon: Icons.science,
-            title: 'EC Sensor (Konsentrasi Nutrisi)',
+            title: "EC Sensor",
             color: Colors.blueAccent,
             valueWidget: Text(
-              '${ec.toStringAsFixed(2)} mS/cm',
+              ec.toStringAsFixed(2),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            chart: _buildEcChart(),
+            chart: _simpleDynamicChart("ec", Colors.blueAccent),
           ),
 
           _buildSensorCard(
             icon: Icons.water,
-            title: 'Level Air',
+            title: "Ketinggian Air",
             color: Colors.teal,
             valueWidget: Text(
-              '${waterLevel.toStringAsFixed(1)} %',
+              "${waterLevel.toStringAsFixed(1)} %",
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            chart: _buildLevelChart(),
+            chart: _simpleDynamicChart("ultrasonic", Colors.teal),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ----------------------- CHARTS ------------------------
+
+  Widget _buildDhtChart() {
+    final suhu = allSensors.where((s) => s.sensorName == "dht_temp").toList();
+    final lembap = allSensors.where((s) => s.sensorName == "dht_humid").toList();
+
+    return LineChart(
+      LineChartData(
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        gridData: const FlGridData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            isCurved: true,
+            color: Colors.redAccent,
+            barWidth: 3,
+            spots: [
+              for (int i = 0; i < suhu.length; i++)
+                FlSpot(i.toDouble(), suhu[i].value),
+            ],
+          ),
+          LineChartBarData(
+            isCurved: true,
+            color: Colors.blueAccent,
+            barWidth: 3,
+            spots: [
+              for (int i = 0; i < lembap.length; i++)
+                FlSpot(i.toDouble(), lembap[i].value),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _simpleDynamicChart(String sensorName, Color color) {
+    final data = allSensors.where((s) => s.sensorName == sensorName).toList();
+
+    return LineChart(
+      LineChartData(
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        gridData: const FlGridData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            isCurved: true,
+            color: color,
+            barWidth: 3,
+            belowBarData: BarAreaData(
+              show: true,
+              color: color.withOpacity(0.2),
+            ),
+            spots: [
+              for (int i = 0; i < data.length; i++)
+                FlSpot(i.toDouble(), data[i].value),
+            ],
           ),
         ],
       ),
@@ -152,7 +255,7 @@ class _DashboardPageState extends State<DashboardPage> {
       margin: const EdgeInsets.only(bottom: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
-      shadowColor: color.withValues(alpha: 0.4),
+      shadowColor: color.withOpacity(0.4),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -180,110 +283,6 @@ class _DashboardPageState extends State<DashboardPage> {
             SizedBox(height: 140, child: chart),
           ],
         ),
-      ),
-    );
-  }
-
-  // ------------------ CHARTS ------------------
-
-  Widget _buildDhtChart() {
-    return LineChart(
-      LineChartData(
-        titlesData: const FlTitlesData(show: false),
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          // Suhu
-          LineChartBarData(
-            isCurved: true,
-            color: Colors.redAccent,
-            barWidth: 3,
-            belowBarData: BarAreaData(show: false),
-            spots: const [
-              FlSpot(0, 27),
-              FlSpot(1, 28),
-              FlSpot(2, 29.5),
-              FlSpot(3, 30),
-              FlSpot(4, 29.8),
-            ],
-          ),
-          // Kelembapan
-          LineChartBarData(
-            isCurved: true,
-            color: Colors.blueAccent,
-            barWidth: 3,
-            belowBarData: BarAreaData(show: false),
-            spots: const [
-              FlSpot(0, 60),
-              FlSpot(1, 62),
-              FlSpot(2, 65),
-              FlSpot(3, 63),
-              FlSpot(4, 64),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLdrChart() {
-    return _simpleChart(Colors.amber[800]!, [
-      const FlSpot(0, 300),
-      const FlSpot(1, 400),
-      const FlSpot(2, 500),
-      const FlSpot(3, 450),
-      const FlSpot(4, 480),
-    ]);
-  }
-
-  Widget _buildPhChart() {
-    return _simpleChart(Colors.green, [
-      const FlSpot(0, 6.4),
-      const FlSpot(1, 6.6),
-      const FlSpot(2, 6.7),
-      const FlSpot(3, 6.8),
-      const FlSpot(4, 6.7),
-    ]);
-  }
-
-  Widget _buildEcChart() {
-    return _simpleChart(Colors.blueAccent, [
-      const FlSpot(0, 1.1),
-      const FlSpot(1, 1.2),
-      const FlSpot(2, 1.3),
-      const FlSpot(3, 1.25),
-      const FlSpot(4, 1.4),
-    ]);
-  }
-
-  Widget _buildLevelChart() {
-    return _simpleChart(Colors.teal, [
-      const FlSpot(0, 80),
-      const FlSpot(1, 82),
-      const FlSpot(2, 83),
-      const FlSpot(3, 81),
-      const FlSpot(4, 84),
-    ]);
-  }
-
-  Widget _simpleChart(Color color, List<FlSpot> spots) {
-    return LineChart(
-      LineChartData(
-        titlesData: const FlTitlesData(show: false),
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            isCurved: true,
-            color: color,
-            barWidth: 3,
-            belowBarData: BarAreaData(
-              show: true,
-              color: color.withValues(alpha: 0.2),
-            ),
-            spots: spots,
-          ),
-        ],
       ),
     );
   }
