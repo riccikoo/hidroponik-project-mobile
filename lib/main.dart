@@ -14,16 +14,16 @@ void main() async {
     ),
   );
 
-  runApp(const MyApp());
+  runApp(const MyApp(isLoggedIn: false));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key, required bool isLoggedIn}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GreenLife - Hydroponic App',
+      title: 'HydroGrow',
       theme: ThemeData(
         primarySwatch: Colors.green,
         useMaterial3: true,
