@@ -80,8 +80,8 @@ class _ControllerPageState extends State<ControllerPage> {
               child: Column(
                 children: [
                   _buildControlCard(
-                    title: "Pompa Air",
-                    icon: Icons.water,
+                    title: "Pompa Nutrisi",
+                    icon: Icons.agriculture,
                     status: pumpOn,
                     color: Colors.blue,
                     onToggle: (v) => setState(() => pumpOn = v),
