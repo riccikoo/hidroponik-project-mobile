@@ -113,4 +113,33 @@ class ApiService {
       throw Exception('Error: $e');
     }
   }
+  
+  static Future<Map<String, dynamic>> controlActuator(
+    String name,
+    bool state,
+    String token,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/control_actuator'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "name": name,
+          "state": state ? "ON" : "OFF",
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+      return responseData;
+    } catch (e) {
+      return {
+        "status": false,
+        "message": "Gagal mengirim perintah: $e",
+      };
+    }
+  }
 }
