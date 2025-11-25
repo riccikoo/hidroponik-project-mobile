@@ -1,36 +1,31 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 
 import 'profile_page.dart';
 import 'controller_page.dart';
-import '../models/sensor_model.dart'; // pastikan path ini sesuai proyekmu
+import '../models/sensor_model.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
 
   @override
-  _DashboardPageState createState() => _DashboardPageState();
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // ---------------- Configuration ----------------
-  static const String baseUrl = 'http://localhost:5000/api'; // ganti ke IP server jika perlu
+  static const String baseUrl = 'http://localhost:5000/api';
 
-  // ---------------- State ----------------
   int _selectedIndex = 0;
   Timer? _refreshTimer;
 
-  // Color palette
   final Color darkGreen = const Color(0xFF456028);
   final Color mediumGreen = const Color(0xFF94A65E);
   final Color lightGreen = const Color(0xFFDDDDA1);
   final Color bgColor = const Color(0xFFF8F9FA);
 
-  // latest values (default)
   double temperature = 0;
   double humidity = 0;
   double ldr = 0;
@@ -38,15 +33,16 @@ class _DashboardPageState extends State<DashboardPage> {
   double ec = 0;
   double waterLevel = 0;
 
-  // store raw sensor records from API
   List<SensorData> allSensors = [];
 
-  // ---------------- Lifecycle ----------------
   @override
   void initState() {
     super.initState();
     _loadSensorData();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadSensorData());
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadSensorData(),
+    );
   }
 
   @override
@@ -55,25 +51,20 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
-  // ---------------- Networking ----------------
   Future<void> _loadSensorData() async {
     try {
       final uri = Uri.parse('$baseUrl/get_sensor_data');
       final res = await http.get(uri);
 
-      // debug print (hapus nanti jika perlu)
-      // print('GET ${uri.toString()} => ${res.statusCode} ${res.body}');
-
       if (res.statusCode == 200) {
-        final body = jsonDecode(res.body);
-        final List data = body['data'] ?? [];
+        final List data = jsonDecode(res.body)['data'] ?? [];
 
-        final List<SensorData> sensors =
-            data.map((e) => SensorData.fromJson(Map<String, dynamic>.from(e))).toList();
+        final List<SensorData> sensors = data
+            .map((e) => SensorData.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
 
         setState(() {
           allSensors = sensors;
-          // ambil latest masing-masing sensor (kalau ada)
           temperature = _latestValue('dht_temp');
           humidity = _latestValue('dht_humid');
           ldr = _latestValue('ldr');
@@ -81,47 +72,15 @@ class _DashboardPageState extends State<DashboardPage> {
           ec = _latestValue('ec');
           waterLevel = _latestValue('ultrasonic');
         });
-      } else {
-        // bisa tambahkan handling khusus
-        debugPrint('Gagal load sensor: ${res.statusCode} ${res.body}');
       }
-    } catch (e) {
-      debugPrint('Error loadSensorData: $e');
-    }
+    } catch (_) {}
   }
 
-  double _latestValue(String sensorName) {
-    try {
-      final items = allSensors.where((s) => s.sensorName == sensorName).toList();
-      if (items.isEmpty) return 0;
-      // API mengembalikan ascending (dari kode backend kita return result[::-1]),
-      // tapi ambil paling akhir untuk jaga-jaga.
-      final latest = items.last;
-      return latest.value;
-    } catch (_) {
-      return 0;
-    }
+  double _latestValue(String name) {
+    final items = allSensors.where((e) => e.sensorName == name).toList();
+    return items.isNotEmpty ? items.last.value : 0;
   }
 
-  List<FlSpot> _toSpots(List<SensorData> list, {int maxPoints = 20}) {
-    if (list.isEmpty) return [const FlSpot(0, 0)];
-    // ambil maksimal maxPoints dari item terakhir (paling baru)
-    final raw = list.length <= maxPoints ? list : list.sublist(list.length - maxPoints);
-    final spots = <FlSpot>[];
-    for (int i = 0; i < raw.length; i++) {
-      spots.add(FlSpot(i.toDouble(), raw[i].value));
-    }
-    return spots;
-  }
-
-  // ---------------- Navigation ----------------
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
     final pages = [
@@ -138,26 +97,28 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
-              _buildNavItem(icon: Icons.settings_remote_rounded, label: 'Control', index: 1),
-              _buildNavItem(icon: Icons.person_rounded, label: 'Profile', index: 2),
+              _navItem(Icons.home_rounded, "Home", 0),
+              _navItem(Icons.settings_remote_rounded, "Control", 1),
+              _navItem(Icons.person_rounded, "Profile", 2),
             ],
           ),
         ),
@@ -165,46 +126,51 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-  }) {
-    final isSelected = _selectedIndex == index;
+  Widget _navItem(IconData icon, String label, int index) {
+    final selected = index == _selectedIndex;
     return GestureDetector(
-      onTap: () => _onItemTapped(index),
-      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _selectedIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: isSelected ? 16 : 12, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: selected ? 18 : 10,
+          vertical: 10,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? darkGreen.withOpacity(0.1) : Colors.transparent,
+          color: selected
+              ? darkGreen.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isSelected ? darkGreen : Colors.grey[400], size: 26),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(color: darkGreen, fontSize: 14, fontWeight: FontWeight.w700),
-              )
-            ]
+            Icon(
+              icon,
+              color: selected ? darkGreen : Colors.grey.shade400,
+              size: 26,
+            ),
+            if (selected)
+              Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: darkGreen,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  // ---------------- Home Page ----------------
   Widget _buildHomePage() {
     return CustomScrollView(
       slivers: [
-        // Header
         SliverToBoxAdapter(child: _buildHeader()),
-        // Content
         SliverToBoxAdapter(child: _buildContent()),
       ],
     );
@@ -213,63 +179,143 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildHeader() {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [darkGreen, mediumGreen]),
+        color: darkGreen,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        image: DecorationImage(
+          image: const AssetImage('assets/images/header.jpg'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black.withValues(alpha: 0.5),
+            BlendMode.darken,
+          ),
+        ),
       ),
+      padding: const EdgeInsets.only(bottom: 30),
       child: SafeArea(
-        bottom: false,
         child: Column(
           children: [
-            // top bar
+            // TOP BAR
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.asset(
+                          "assets/images/logo-putih.png",
+                          width: 48,
+                          height: 48,
+                        ),
                       ),
-                      child: const Icon(Icons.eco_rounded, color: Colors.white, size: 28),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "HydroGrow",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 23,
+                            ),
+                          ),
+                          Text(
+                            "Smart Controlling System",
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
                     ),
-                    const SizedBox(width: 14),
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('HydroGrow', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                      Text('Smart Monitoring System', style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
-                    ]),
-                  ]),
-                  // notif
-                  Container(
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5)),
-                    child: Stack(children: [
-                      IconButton(icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 26), onPressed: () {}),
-                      Positioned(right: 10, top: 10, child: Container(width: 8, height: 8, decoration: BoxDecoration(color: const Color(0xFFFF6B6B), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)))),
-                    ]),
-                  )
+                    onPressed: () {},
+                  ),
                 ],
               ),
             ),
-            // welcome
+
+            // STATUS CARD
             Container(
-              margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.3), width: 1)),
-              child: Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('👋 Welcome Back!', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 15, fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  const Text('All Systems Running', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: const Color(0xFF51CF66), borderRadius: BorderRadius.circular(20)), child: Row(mainAxisSize: MainAxisSize.min, children: const [SizedBox(width: 6, height: 6, child: DecoratedBox(decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle))), SizedBox(width: 6), Text('Active', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))])),
-                ])),
-                const SizedBox(width: 16),
-                Container(width: 80, height: 80, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.3), width: 2)), child: const Icon(Icons.agriculture_rounded, size: 40, color: Colors.white))
-              ]),
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "👋 Welcome Back!",
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "All Systems Running",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Text(
+                            "Active",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.agriculture_rounded,
+                    color: Colors.white,
+                    size: 52,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -277,203 +323,359 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildContent() {
-    return Transform.translate(
-      offset: const Offset(0, -20),
-      child: Container(
-        decoration: BoxDecoration(color: bgColor, borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30))),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // quick stats
-            Row(children: [
-              Expanded(child: _buildQuickStatCard(icon: Icons.thermostat_outlined, label: 'Temperature', value: '${temperature.toStringAsFixed(1)}°C', color: const Color(0xFFFF6B6B), bgColor: const Color(0xFFFFE5E5))),
-              const SizedBox(width: 12),
-              Expanded(child: _buildQuickStatCard(icon: Icons.water_drop_outlined, label: 'Humidity', value: '${humidity.toStringAsFixed(1)}%', color: const Color(0xFF4ECDC4), bgColor: const Color(0xFFE0F7F6))),
-            ]),
-            const SizedBox(height: 12),
-            Row(children: [
-              Expanded(child: _buildQuickStatCard(icon: Icons.wb_sunny_outlined, label: 'Light', value: '${ldr.toStringAsFixed(0)} Lux', color: const Color(0xFFFFB84D), bgColor: const Color(0xFFFFF4E5))),
-              const SizedBox(width: 12),
-              Expanded(child: _buildQuickStatCard(icon: Icons.water_outlined, label: 'Water Level', value: '${waterLevel.toStringAsFixed(0)}%', color: mediumGreen, bgColor: lightGreen.withOpacity(0.3))),
-            ]),
-            const SizedBox(height: 30),
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ===== Quick Stats
+          Row(
+            children: [
+              Expanded(
+                child: _quickStat(
+                  Icons.thermostat_outlined,
+                  "Temperature",
+                  "${temperature.toStringAsFixed(1)}°C",
+                  color: Colors.red,
+                  bg: Colors.red.shade50,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: _quickStat(
+                  Icons.water_drop_outlined,
+                  "Humidity",
+                  "${humidity.toStringAsFixed(1)}%",
+                  color: Colors.teal,
+                  bg: Colors.teal.shade50,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _quickStat(
+                  Icons.wb_sunny_outlined,
+                  "Light",
+                  "${ldr.toStringAsFixed(0)} Lux",
+                  color: Colors.orange,
+                  bg: Colors.orange.shade50,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: _quickStat(
+                  Icons.water_outlined,
+                  "Water Level",
+                  "${waterLevel.toStringAsFixed(0)}%",
+                  color: mediumGreen,
+                  bg: lightGreen.withValues(alpha: 0.3),
+                ),
+              ),
+            ],
+          ),
 
-            // header sensor section
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Sensor Monitoring', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: darkGreen)), const SizedBox(height: 4), Text('Real-time data tracking', style: TextStyle(fontSize: 14, color: Colors.grey[600]))]),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: lightGreen.withOpacity(0.3), borderRadius: BorderRadius.circular(20)), child: Row(children: [Icon(Icons.access_time_rounded, size: 16, color: darkGreen), const SizedBox(width: 6), Text('Live', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: darkGreen))])),
-            ]),
-            const SizedBox(height: 16),
+          const SizedBox(height: 30),
 
-            // sensor cards
-            _buildModernSensorCard(
-              icon: Icons.science_outlined,
-              title: 'pH Level',
-              subtitle: 'Acidity/Alkalinity',
-              value: ph.toStringAsFixed(2),
-              unit: 'pH',
-              color: const Color(0xFF51CF66),
-              chart: _buildPhChart(),
-              status: ph >= 6.0 && ph <= 7.5 ? 'Optimal' : 'Warning',
+          // SECTION TITLE
+          Text(
+            "Sensor Monitoring",
+            style: TextStyle(
+              color: darkGreen,
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
             ),
+          ),
+          Text(
+            "Real-time tracking",
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
 
-            _buildModernSensorCard(
-              icon: Icons.bolt_outlined,
-              title: 'EC Sensor',
-              subtitle: 'Nutrient Concentration',
-              value: ec.toStringAsFixed(2),
-              unit: 'mS/cm',
-              color: const Color(0xFF5C7CFA),
-              chart: _buildEcChart(),
-              status: ec >= 1.0 && ec <= 2.0 ? 'Optimal' : 'Warning',
-            ),
+          const SizedBox(height: 18),
 
-            _buildModernSensorCard(
-              icon: Icons.thermostat_outlined,
-              title: 'Temperature & Humidity',
-              subtitle: 'DHT11 Sensor',
-              value: '${temperature.toStringAsFixed(1)}°C / ${humidity.toStringAsFixed(1)}%',
-              unit: '',
-              color: const Color(0xFFFF6B6B),
-              chart: _buildDhtChart(),
-              status: 'Optimal',
-            ),
+          _sensorCard(
+            icon: Icons.science_outlined,
+            title: "pH Level",
+            value: ph.toStringAsFixed(2),
+            unit: "pH",
+            color: Colors.green,
+            status: ph >= 6 && ph <= 7.5 ? "Optimal" : "Warning",
+            chart: _chart("ph", Colors.green),
+            colorStatus: 'green',
+          ),
 
-            _buildModernSensorCard(
-              icon: Icons.wb_sunny_outlined,
-              title: 'Light Intensity',
-              subtitle: 'LDR Sensor',
-              value: ldr.toStringAsFixed(0),
-              unit: 'Lux',
-              color: const Color(0xFFFFB84D),
-              chart: _buildLdrChart(),
-              status: ldr > 300 ? 'Good' : 'Low Light',
-            ),
+          _sensorCard(
+            icon: Icons.bolt_outlined,
+            title: "EC Sensor",
+            value: ec.toStringAsFixed(2),
+            unit: "mS/cm",
+            color: Colors.blue,
+            status: ec >= 1 && ec <= 2 ? "Optimal" : "Warning",
+            chart: _chart("ec", Colors.blue),
+            colorStatus: 'blue',
+          ),
 
-            const SizedBox(height: 20),
-          ]),
-        ),
+          _sensorCard(
+            icon: Icons.thermostat_outlined,
+            title: "Temperature & Humidity",
+            value:
+                "${temperature.toStringAsFixed(1)}°C / ${humidity.toStringAsFixed(1)}%",
+            color: Colors.red,
+            status: "Optimal",
+            chart: _dualChart(),
+            colorStatus: 'red',
+          ),
+
+          _sensorCard(
+            icon: Icons.wb_sunny_outlined,
+            title: "Light Intensity",
+            value: ldr.toStringAsFixed(0),
+            unit: "Lux",
+            color: Colors.orange,
+            status: ldr > 300 ? "Good" : "Low Light",
+            chart: _chart("ldr", Colors.orange),
+            colorStatus: 'orange',
+          ),
+        ],
       ),
     );
   }
 
-  // ------------------ Cards / Helpers ----------------
-
-  Widget _buildQuickStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
+  // ======= UI REUSABLES =======
+  Widget _quickStat(
+    IconData icon,
+    String title,
+    String value, {
     required Color color,
-    required Color bgColor,
+    required Color bg,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 4))]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(14), boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 2))]),
-          child: Icon(icon, color: color, size: 26),
-        ),
-        const SizedBox(height: 14),
-        Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkGreen, letterSpacing: -0.5)),
-      ]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: darkGreen,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildModernSensorCard({
+  Widget _sensorCard({
     required IconData icon,
     required String title,
-    required String subtitle,
     required String value,
-    required String unit,
+    required String colorStatus,
     required Color color,
     required Widget chart,
+    String? unit,
     required String status,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 5))]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(gradient: LinearGradient(colors: [color.withOpacity(0.2), color.withOpacity(0.1)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.3), width: 1)),
-            child: Icon(icon, color: color, size: 30),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: darkGreen,
+                      ),
+                    ),
+                    Text(
+                      "Sensor Data",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: status == "Optimal" || status == "Good"
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : Colors.orange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: status == "Optimal" || status == "Good"
+                        ? Colors.green.shade700
+                        : Colors.orange.shade700,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: darkGreen)), const SizedBox(height: 4), Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500))])),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(color: (status == 'Optimal' || status == 'Good') ? const Color(0xFF51CF66).withOpacity(0.15) : Colors.orange.withOpacity(0.15), borderRadius: BorderRadius.circular(20), border: Border.all(color: (status == 'Optimal' || status == 'Good') ? const Color(0xFF51CF66).withOpacity(0.3) : Colors.orange.withOpacity(0.3), width: 1)),
-            child: Text(status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: (status == 'Optimal' || status == 'Good') ? const Color(0xFF51CF66) : Colors.orange[700])),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              if (unit != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6, bottom: 4),
+                  child: Text(
+                    unit,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ]),
-        const SizedBox(height: 20),
-        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text(value, style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold, color: color, height: 1, letterSpacing: -1)),
-          const SizedBox(width: 8),
-          Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(unit, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[600]))),
-        ]),
-        const SizedBox(height: 20),
-        SizedBox(height: 120, child: chart),
-      ]),
-    );
-  }
-
-  // ------------------ CHARTS ------------------
-
-  Widget _buildDhtChart() {
-    final tempData = allSensors.where((s) => s.sensorName == 'dht_temp').toList();
-    final humidData = allSensors.where((s) => s.sensorName == 'dht_humid').toList();
-
-    final tempSpots = _toSpots(tempData);
-    final humidSpots = _toSpots(humidData);
-
-    return LineChart(
-      LineChartData(
-        titlesData: const FlTitlesData(show: false),
-        gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 5, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withOpacity(0.1), strokeWidth: 1)),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(isCurved: true, color: const Color(0xFFFF6B6B), barWidth: 3, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: const Color(0xFFFF6B6B).withOpacity(0.1)), spots: tempSpots),
-          LineChartBarData(isCurved: true, color: const Color(0xFF4ECDC4), barWidth: 3, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: const Color(0xFF4ECDC4).withOpacity(0.1)), spots: humidSpots),
+          const SizedBox(height: 16),
+          SizedBox(height: 120, child: chart),
         ],
       ),
     );
   }
 
-  Widget _buildLdrChart() {
-    final data = allSensors.where((s) => s.sensorName == 'ldr').toList();
-    final spots = _toSpots(data);
-    return _simpleChart(const Color(0xFFFFB84D), spots);
+  // ===== CHART PART =====
+  Widget _chart(String key, Color color) {
+    final data = allSensors.where((e) => e.sensorName == key).toList();
+    final spots = _spots(data);
+    return _lineChart(spots, color);
   }
 
-  Widget _buildPhChart() {
-    final data = allSensors.where((s) => s.sensorName == 'ph').toList();
-    final spots = _toSpots(data);
-    return _simpleChart(const Color(0xFF51CF66), spots);
-  }
+  Widget _dualChart() {
+    final temp = allSensors.where((e) => e.sensorName == "dht_temp").toList();
+    final hum = allSensors.where((e) => e.sensorName == "dht_humid").toList();
 
-  Widget _buildEcChart() {
-    final data = allSensors.where((s) => s.sensorName == 'ec').toList();
-    final spots = _toSpots(data);
-    return _simpleChart(const Color(0xFF5C7CFA), spots);
-  }
-
-  Widget _simpleChart(Color color, List<FlSpot> spots) {
     return LineChart(
       LineChartData(
         titlesData: const FlTitlesData(show: false),
-        gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 100, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withOpacity(0.1), strokeWidth: 1)),
+        gridData: FlGridData(
+          show: true,
+          horizontalInterval: 5,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: Colors.grey.withValues(alpha: 0.1), strokeWidth: 1),
+        ),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [_line(temp, Colors.red), _line(hum, Colors.teal)],
+      ),
+    );
+  }
+
+  LineChartBarData _line(List<SensorData> list, Color c) {
+    final s = _spots(list);
+    return LineChartBarData(
+      isCurved: true,
+      color: c,
+      barWidth: 3,
+      dotData: const FlDotData(show: false),
+      belowBarData: BarAreaData(show: true, color: c.withValues(alpha: 0.08)),
+      spots: s,
+    );
+  }
+
+  Widget _lineChart(List<FlSpot> spots, Color color) {
+    return LineChart(
+      LineChartData(
+        titlesData: const FlTitlesData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: Colors.grey.withValues(alpha: 0.1), strokeWidth: 1),
+        ),
         borderData: FlBorderData(show: false),
         lineBarsData: [
-          LineChartBarData(isCurved: true, color: color, barWidth: 3, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: color.withOpacity(0.1)), spots: spots),
+          LineChartBarData(
+            isCurved: true,
+            barWidth: 3,
+            color: color,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: color.withValues(alpha: 0.1),
+            ),
+            spots: spots,
+          ),
         ],
       ),
+    );
+  }
+
+  List<FlSpot> _spots(List<SensorData> list) {
+    if (list.isEmpty) return [const FlSpot(0, 0)];
+    final data = list.length > 20 ? list.sublist(list.length - 20) : list;
+    return List.generate(
+      data.length,
+      (i) => FlSpot(i.toDouble(), data[i].value),
     );
   }
 }
