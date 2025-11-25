@@ -1,59 +1,60 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class ControllerPage extends StatefulWidget {
   const ControllerPage({Key? key}) : super(key: key);
 
   @override
-  State<ControllerPage> createState() => _ControllerPageState();
+  _ControllerPageState createState() => _ControllerPageState();
 }
 
 class _ControllerPageState extends State<ControllerPage> {
-  final Color darkGreen = const Color(0xFF456028);
-  final Color mediumGreen = const Color(0xFF94A65E);
-  final Color lightGreen = const Color(0xFFDDDDA1);
-  final Color bgColor = const Color(0xFFF8F9FA);
+  bool pumpNutrition = false;
+  bool lamp = false;
+  bool pumpPhUp = false;
+  bool pumpPhDown = false;
 
-  bool pumpOn = false;
-  bool lightOn = false;
-  bool pumpPhOn = false;
+  // TODO: isi token login user
+  final String token = "ISI_TOKEN_LOGIN_MU";
+
+  Future<void> sendCmd(String name, bool state) async {
+    final res = await ApiService.controlActuator(
+      name,
+      state,
+      token,
+    );
+
+    print("[ACTUATOR RESPONSE] $res");
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: Column(
         children: [
-          // ==== Header ====
+          // Header
           Container(
             padding: const EdgeInsets.fromLTRB(20, 50, 20, 28),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 colors: [
-                  Color(0xFF456028), // Dark Green
-                  Color(0xFF6F8A3A), // Medium Green
+                  Color(0xFF456028),
+                  Color(0xFF6F8A3A)
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: const BorderRadius.vertical(
+              borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(40),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 25,
-                  offset: const Offset(0, 6),
-                ),
-              ],
             ),
             width: double.infinity,
             child: const Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // 👉 Text jadi center
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   "Device Controller ⚙️",
-                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 26,
@@ -73,7 +74,8 @@ class _ControllerPageState extends State<ControllerPage> {
               ],
             ),
           ),
-          // ==== Content ====
+
+          // Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
@@ -82,23 +84,42 @@ class _ControllerPageState extends State<ControllerPage> {
                   _buildControlCard(
                     title: "Pompa Nutrisi",
                     icon: Icons.agriculture,
-                    status: pumpOn,
+                    status: pumpNutrition,
                     color: Colors.blue,
-                    onToggle: (v) => setState(() => pumpOn = v),
+                    onToggle: (v) {
+                      setState(() => pumpNutrition = v);
+                      sendCmd("pump_nutrisi", v);
+                    },
                   ),
                   _buildControlCard(
                     title: "Lampu",
                     icon: Icons.lightbulb_rounded,
-                    status: lightOn,
+                    status: lamp,
                     color: Colors.amber,
-                    onToggle: (v) => setState(() => lightOn = v),
+                    onToggle: (v) {
+                      setState(() => lamp = v);
+                      sendCmd("led", v);
+                    },
                   ),
                   _buildControlCard(
-                    title: "Pompa pH",
+                    title: "Pompa pH Up",
                     icon: Icons.water_damage_rounded,
-                    status: pumpPhOn,
+                    status: pumpPhUp,
                     color: Colors.green,
-                    onToggle: (v) => setState(() => pumpPhOn = v),
+                    onToggle: (v) {
+                      setState(() => pumpPhUp = v);
+                      sendCmd("pump_ph_up", v);
+                    },
+                  ),
+                  _buildControlCard(
+                    title: "Pompa pH Down",
+                    icon: Icons.water_drop_rounded,
+                    status: pumpPhDown,
+                    color: Colors.red,
+                    onToggle: (v) {
+                      setState(() => pumpPhDown = v);
+                      sendCmd("pump_ph_down", v);
+                    },
                   ),
                 ],
               ),
@@ -109,7 +130,6 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  // ===== Custom Card Style =====
   Widget _buildControlCard({
     required String title,
     required IconData icon,
@@ -125,7 +145,7 @@ class _ControllerPageState extends State<ControllerPage> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -136,7 +156,7 @@ class _ControllerPageState extends State<ControllerPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: color, size: 30),
@@ -154,7 +174,7 @@ class _ControllerPageState extends State<ControllerPage> {
           ),
           Switch(
             value: status,
-            activeTrackColor: darkGreen.withValues(alpha: 0.4),
+            activeTrackColor: const Color(0xFF456028).withOpacity(0.4),
             onChanged: onToggle,
           ),
         ],
