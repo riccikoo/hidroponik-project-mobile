@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../models/sensor_model.dart';
+import '../models/message_model.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:5000/api';
@@ -141,5 +142,17 @@ class ApiService {
         "message": "Gagal mengirim perintah: $e",
       };
     }
+  }
+
+  static Future<List<UserMessage>> getUserMessages(String token) async {
+  final res = await http.get(
+    Uri.parse("$baseUrl/user/messages"),
+    headers: {"Authorization": "Bearer $token"},
+    );
+
+    final data = jsonDecode(res.body);
+    List messages = data["messages"];
+
+    return messages.map((m) => UserMessage.fromJson(m)).toList();
   }
 }
