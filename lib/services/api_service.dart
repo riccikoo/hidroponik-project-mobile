@@ -5,12 +5,12 @@ import '../models/sensor_model.dart';
 import '../models/message_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'https://41daa9583cbf.ngrok-free.app/api';
 
   static Future<Map<String, dynamic>> register(
-  User user,
-  String password,
-  String confirmPassword,
+    User user,
+    String password,
+    String confirmPassword,
   ) async {
     try {
       final response = await http.post(
@@ -49,14 +49,14 @@ class ApiService {
         };
       }
     } catch (e) {
-      return {
-        'status': false,
-        'message': 'Koneksi gagal: $e',
-      };
+      return {'status': false, 'message': 'Koneksi gagal: $e'};
     }
   }
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
@@ -64,10 +64,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       final responseData = jsonDecode(response.body);
@@ -76,8 +73,8 @@ class ApiService {
         return {
           'status': true,
           // 🔑 CRITICAL FIX: Extract and include the token
-          'token': responseData['token'], 
-          'user': User.fromJson(responseData['user']), 
+          'token': responseData['token'],
+          'user': User.fromJson(responseData['user']),
           'message': responseData['message'] ?? 'Login berhasil',
         };
       } else {
@@ -87,10 +84,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      return {
-        'status': false,
-        'message': 'Koneksi gagal: $e',
-      };
+      return {'status': false, 'message': 'Koneksi gagal: $e'};
     }
   }
 
@@ -114,7 +108,7 @@ class ApiService {
       throw Exception('Error: $e');
     }
   }
-  
+
   static Future<Map<String, dynamic>> controlActuator(
     String name,
     bool state,
@@ -128,26 +122,20 @@ class ApiService {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          "name": name,
-          "state": state ? "ON" : "OFF",
-        }),
+        body: jsonEncode({"name": name, "state": state ? "ON" : "OFF"}),
       );
 
       final responseData = jsonDecode(response.body);
       return responseData;
     } catch (e) {
-      return {
-        "status": false,
-        "message": "Gagal mengirim perintah: $e",
-      };
+      return {"status": false, "message": "Gagal mengirim perintah: $e"};
     }
   }
 
   static Future<List<UserMessage>> getUserMessages(String token) async {
-  final res = await http.get(
-    Uri.parse("$baseUrl/user/messages"),
-    headers: {"Authorization": "Bearer $token"},
+    final res = await http.get(
+      Uri.parse("$baseUrl/user/messages"),
+      headers: {"Authorization": "Bearer $token"},
     );
 
     final data = jsonDecode(res.body);
