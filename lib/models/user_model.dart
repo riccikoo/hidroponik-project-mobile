@@ -3,20 +3,22 @@ class User {
   final String name;
   final String email;
   final String? token;
-  // 🔑 Fields added to match the Python model
+  // 🔑 Fields updated/added to match the Python model and new requirements
   final String? role; 
   final String? status; 
-  final String? timestamp; // Use String to hold the formatted date/time
+  final String? createdAt; // New field for creation time
+  final String? updatedAt; // New field for update time
 
   User({
     this.id,
     required this.name,
     required this.email,
     this.token,
-    // 🔑 Required in constructor
+    // 🔑 Required in constructor (assuming optional for now based on '?' in declaration)
     this.role, 
     this.status, 
-    this.timestamp,
+    this.createdAt, // Include new field
+    this.updatedAt, // Include new field
   });
 
   // --- fromJson: Reads data from the API response ---
@@ -26,10 +28,11 @@ class User {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       token: json['token'],
-      // 🔑 Reading the new fields from JSON
+      // 🔑 Reading the fields from JSON, including the new ones
       role: json['role']?.toString(), 
       status: json['status']?.toString(),
-      timestamp: json['timestamp']?.toString(), // Use the correct spelling 'timestamp'
+      createdAt: json['created_at']?.toString(), // Reading from 'created_at'
+      updatedAt: json['updated_at']?.toString(), // Reading from 'updated_at'
     );
   }
 
@@ -43,7 +46,8 @@ class User {
       // 🔑 Including the new fields in the JSON map
       'role': role,
       'status': status,
-      'timestamp': timestamp, // Use the correct spelling 'timestamp'
+      'created_at': createdAt, // Using 'created_at' key
+      'updated_at': updatedAt, // Using 'updated_at' key
     };
   }
 }
