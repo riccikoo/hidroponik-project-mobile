@@ -3,9 +3,10 @@ import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../models/sensor_model.dart';
 import '../models/message_model.dart';
+import 'shared_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://41daa9583cbf.ngrok-free.app/api';
+  static const String baseUrl = 'http://172.29.26.226:5000/api';
 
   static Future<Map<String, dynamic>> register(
     User user,
@@ -132,15 +133,24 @@ class ApiService {
     }
   }
 
-  static Future<List<UserMessage>> getUserMessages(String token) async {
-    final res = await http.get(
-      Uri.parse("$baseUrl/user/messages"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+static Future<List<UserMessage>> getUserMessages(int userId) async {
+  final token = await SharedService.getToken();
 
-    final data = jsonDecode(res.body);
-    List messages = data["messages"];
+  final response = await http.get(
+    Uri.parse(
+      "$baseUrl/user/messages?user_id=$userId",
+    ),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    },
+  );
 
-    return messages.map((m) => UserMessage.fromJson(m)).toList();
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.map((e) => UserMessage.fromJson(e)).toList();
+  } else {
+    throw Exception("Failed to load messages");
   }
+}
 }

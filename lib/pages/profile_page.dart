@@ -61,23 +61,32 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // load messages
-  Future<void> _loadMessages() async {
-    setState(() => _loadingMessages = true);
+Future<void> _loadMessages() async {
+  setState(() => _loadingMessages = true);
 
-    final tokenData = await SharedService.getToken();
-    if (tokenData == null) return;
+  // Jika id bertipe String, konversi ke int
+  final userIdRaw = _userData!['id'];
+  final userId = userIdRaw is int ? userIdRaw : int.tryParse(userIdRaw) ?? 0;
 
-    try {
-      final list = await ApiService.getUserMessages(tokenData);
-      setState(() {
-        _messages = list;
-        _loadingMessages = false;
-      });
-    } catch (e) {
-      debugPrint("Error fetching messages: $e");
-      setState(() => _loadingMessages = false);
-    }
+  if (userId == 0) {
+    debugPrint("Invalid userId");
+    setState(() => _loadingMessages = false);
+    return;
   }
+
+  try {
+    final list = await ApiService.getUserMessages(userId);
+    setState(() {
+      _messages = list;
+      _loadingMessages = false;
+    });
+  } catch (e) {
+    debugPrint("Error fetching messages: $e");
+    setState(() => _loadingMessages = false);
+  }
+}
+
+
 
   Future<void> _logout() async {
     await SharedService.logout();
@@ -469,7 +478,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildInfoCard(
             icon: Icons.calendar_today_rounded,
             title: 'Member Since',
-            value: _userData!['created_at']?.toString() ?? 'Recently',
+            value: _userData!['timestamp']?.toString() ?? 'Recently',
             color: Colors.purple.shade600,
           ),
 

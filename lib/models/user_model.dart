@@ -31,7 +31,7 @@ class User {
       // 🔑 Reading the fields from JSON, including the new ones
       role: json['role']?.toString(), 
       status: json['status']?.toString(),
-      createdAt: json['created_at']?.toString(), // Reading from 'created_at'
+      createdAt: json['create_at']?.toString(), // Reading from 'created_at'
       updatedAt: json['updated_at']?.toString(), // Reading from 'updated_at'
     );
   }
@@ -46,7 +46,7 @@ class User {
       // 🔑 Including the new fields in the JSON map
       'role': role,
       'status': status,
-      'created_at': createdAt, // Using 'created_at' key
+      'create_at': createdAt, // Using 'created_at' key
       'updated_at': updatedAt, // Using 'updated_at' key
     };
   }
