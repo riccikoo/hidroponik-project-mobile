@@ -113,7 +113,9 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       final adm4Code = locations[selectedCity]!;
       final response = await http.get(
-        Uri.parse('https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=$adm4Code'),
+        Uri.parse(
+          'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=$adm4Code',
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -153,12 +155,20 @@ class _DashboardPageState extends State<DashboardPage> {
             Positioned(
               left: 0,
               top: size * 0.1,
-              child: Icon(Icons.wb_sunny, size: size * 0.7, color: const Color(0xFFFDB813)),
+              child: Icon(
+                Icons.wb_sunny,
+                size: size * 0.7,
+                color: const Color(0xFFFDB813),
+              ),
             ),
             Positioned(
               right: 0,
               bottom: size * 0.1,
-              child: Icon(Icons.cloud, size: size * 0.5, color: const Color(0xFFA8D8EA)),
+              child: Icon(
+                Icons.cloud,
+                size: size * 0.5,
+                color: const Color(0xFFA8D8EA),
+              ),
             ),
           ],
         ),
@@ -198,61 +208,62 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // Method untuk fetch air quality data
-Future<void> _fetchAirQualityData() async {
-  setState(() => airQualityLoading = true);
+  Future<void> _fetchAirQualityData() async {
+    setState(() => airQualityLoading = true);
 
-  try {
-    // API BMKG Kualitas Udara (gratis, tanpa API key)
-    final response = await http.get(
-      Uri.parse('https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-JawaBarat.xml'),
-    );
+    try {
+      // API BMKG Kualitas Udara (gratis, tanpa API key)
+      final response = await http.get(
+        Uri.parse(
+          'https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-JawaBarat.xml',
+        ),
+      );
 
-    if (response.statusCode == 200) {
-      // Parse XML response dari BMKG
-      // Untuk simplicity, kita gunakan data dummy yang realistis
+      if (response.statusCode == 200) {
+        // Parse XML response dari BMKG
+        // Untuk simplicity, kita gunakan data dummy yang realistis
 
-      setState(() {
-        airQualityData = {
-          'aqi': 55, // Air Quality Index (0-500)
-          'pm25': 12.5, // PM2.5 (μg/m³)
-          'pm10': 25.3, // PM10 (μg/m³)
-          'co': 0.3, // Carbon Monoxide
-          'no2': 15.2, // Nitrogen Dioxide
-          'o3': 45.8, // Ozone
-        };
+        setState(() {
+          airQualityData = {
+            'aqi': 55, // Air Quality Index (0-500)
+            'pm25': 12.5, // PM2.5 (μg/m³)
+            'pm10': 25.3, // PM10 (μg/m³)
+            'co': 0.3, // Carbon Monoxide
+            'no2': 15.2, // Nitrogen Dioxide
+            'o3': 45.8, // Ozone
+          };
 
-        // Tentukan status berdasarkan AQI
-        final aqi = airQualityData!['aqi'] as int;
-        if (aqi <= 50) {
-          aqiStatus = 'Good';
-          aqiColor = Colors.green;
-        } else if (aqi <= 100) {
-          aqiStatus = 'Moderate';
-          aqiColor = Colors.yellow.shade700;
-        } else if (aqi <= 150) {
-          aqiStatus = 'Unhealthy for Sensitive';
-          aqiColor = Colors.orange;
-        } else if (aqi <= 200) {
-          aqiStatus = 'Unhealthy';
-          aqiColor = Colors.red;
-        } else if (aqi <= 300) {
-          aqiStatus = 'Very Unhealthy';
-          aqiColor = Colors.purple;
-        } else {
-          aqiStatus = 'Hazardous';
-          aqiColor = Colors.red.shade900;
-        }
+          // Tentukan status berdasarkan AQI
+          final aqi = airQualityData!['aqi'] as int;
+          if (aqi <= 50) {
+            aqiStatus = 'Good';
+            aqiColor = Colors.green;
+          } else if (aqi <= 100) {
+            aqiStatus = 'Moderate';
+            aqiColor = Colors.yellow.shade700;
+          } else if (aqi <= 150) {
+            aqiStatus = 'Unhealthy for Sensitive';
+            aqiColor = Colors.orange;
+          } else if (aqi <= 200) {
+            aqiStatus = 'Unhealthy';
+            aqiColor = Colors.red;
+          } else if (aqi <= 300) {
+            aqiStatus = 'Very Unhealthy';
+            aqiColor = Colors.purple;
+          } else {
+            aqiStatus = 'Hazardous';
+            aqiColor = Colors.red.shade900;
+          }
 
-        airQualityLoading = false;
-      });
-    } else {
+          airQualityLoading = false;
+        });
+      } else {
+        setState(() => airQualityLoading = false);
+      }
+    } catch (e) {
       setState(() => airQualityLoading = false);
     }
-  } catch (e) {
-    setState(() => airQualityLoading = false);
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -650,7 +661,7 @@ Future<void> _fetchAirQualityData() async {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Container(
+          Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -662,9 +673,7 @@ Future<void> _fetchAirQualityData() async {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -697,109 +706,116 @@ Future<void> _fetchAirQualityData() async {
                     ],
                   )
                 : weatherData != null
-                    ? Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.08),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
+                ? Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
                             ),
-                            child: _getWeatherIcon(_getCurrentWeatherCode(), size: 40),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          ],
+                        ),
+                        child: _getWeatherIcon(
+                          _getCurrentWeatherCode(),
+                          size: 40,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on,
-                                      size: 16,
-                                      color: deepGreen.withValues(alpha: 0.7),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      selectedCity,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: deepGreen.withValues(alpha: 0.8),
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
+                                Icon(
+                                  Icons.location_on,
+                                  size: 16,
+                                  color: deepGreen.withValues(alpha: 0.7),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(width: 6),
                                 Text(
-                                  _getWeatherDesc(_getCurrentWeatherCode()),
+                                  selectedCity,
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: deepGreen,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: deepGreen.withValues(alpha: 0.8),
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Current weather conditions',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${weatherData!['data'][0]['cuaca'][0][0]['t'] ?? '--'}°',
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w800,
-                                  color: deepGreen,
-                                  height: 1,
-                                  letterSpacing: -1,
-                                ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _getWeatherDesc(_getCurrentWeatherCode()),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: deepGreen,
+                                letterSpacing: 0.5,
                               ),
-                              Text(
-                                'Celsius',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Current weather conditions',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
-                          ),
-                        ],
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Icon(Icons.cloud_off, color: Colors.grey.shade400, size: 28),
-                          const SizedBox(width: 12),
                           Text(
-                            'Weather unavailable',
+                            '${weatherData!['data'][0]['cuaca'][0][0]['t'] ?? '--'}°',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              color: deepGreen,
+                              height: 1,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                          Text(
+                            'Celsius',
+                            style: TextStyle(
+                              fontSize: 12,
                               color: Colors.grey.shade600,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.cloud_off,
+                        color: Colors.grey.shade400,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Weather unavailable',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
 
           const SizedBox(height: 32),
@@ -817,9 +833,7 @@ Future<void> _fetchAirQualityData() async {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -852,147 +866,163 @@ Future<void> _fetchAirQualityData() async {
                     ],
                   )
                 : airQualityData != null
-                    ? Column(
+                ? Column(
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
                                 ),
-                                child: Icon(
-                                  Icons.air_rounded,
-                                  size: 40,
-                                  color: aqiColor,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.air_rounded,
+                              size: 40,
+                              color: aqiColor,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.location_on,
-                                          size: 16,
-                                          color: deepGreen.withValues(alpha: 0.7),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          'Air Quality - $selectedCity',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: deepGreen.withValues(alpha: 0.8),
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ],
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 16,
+                                      color: deepGreen.withValues(alpha: 0.7),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      aqiStatus,
+                                      'Air Quality - $selectedCity',
                                       style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        color: deepGreen,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: deepGreen.withValues(alpha: 0.8),
                                         letterSpacing: 0.5,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Real-time air monitoring',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
                                   ],
                                 ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${airQualityData!['aqi']}',
-                                    style: TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.w800,
-                                      color: aqiColor,
-                                      height: 1,
-                                      letterSpacing: -1,
-                                    ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  aqiStatus,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: deepGreen,
+                                    letterSpacing: 0.5,
                                   ),
-                                  Text(
-                                    'AQI',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Real-time air monitoring',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          // Detail pollutants
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.5),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _pollutantInfo('PM2.5', '${airQualityData!['pm25']}', 'μg/m³'),
-                                Container(
-                                  width: 1,
-                                  height: 40,
-                                  color: Colors.grey.shade300,
                                 ),
-                                _pollutantInfo('PM10', '${airQualityData!['pm10']}', 'μg/m³'),
-                                Container(
-                                  width: 1,
-                                  height: 40,
-                                  color: Colors.grey.shade300,
-                                ),
-                                _pollutantInfo('O₃', '${airQualityData!['o3']}', 'ppb'),
                               ],
                             ),
                           ),
-                        ],
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.air_rounded, color: Colors.grey.shade400, size: 28),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Air quality unavailable',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${airQualityData!['aqi']}',
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
+                                  color: aqiColor,
+                                  height: 1,
+                                  letterSpacing: -1,
+                                ),
+                              ),
+                              Text(
+                                'AQI',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+                      // Detail pollutants
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _pollutantInfo(
+                              'PM2.5',
+                              '${airQualityData!['pm25']}',
+                              'μg/m³',
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.grey.shade300,
+                            ),
+                            _pollutantInfo(
+                              'PM10',
+                              '${airQualityData!['pm10']}',
+                              'μg/m³',
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.grey.shade300,
+                            ),
+                            _pollutantInfo(
+                              'O₃',
+                              '${airQualityData!['o3']}',
+                              'ppb',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.air_rounded,
+                        color: Colors.grey.shade400,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Air quality unavailable',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
 
           const SizedBox(height: 32),
@@ -1283,39 +1313,39 @@ Future<void> _fetchAirQualityData() async {
   }
 
   Widget _pollutantInfo(String label, String value, String unit) {
-  return Column(
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          color: Colors.grey.shade600,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
         ),
-      ),
-      const SizedBox(height: 6),
-      Text(
-        value,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: deepGreen,
-          letterSpacing: 0.5,
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: deepGreen,
+            letterSpacing: 0.5,
+          ),
         ),
-      ),
-      const SizedBox(height: 2),
-      Text(
-        unit,
-        style: TextStyle(
-          fontSize: 10,
-          color: Colors.grey.shade500,
-          fontWeight: FontWeight.w600,
+        const SizedBox(height: 2),
+        Text(
+          unit,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _sensorCard({
     required IconData icon,

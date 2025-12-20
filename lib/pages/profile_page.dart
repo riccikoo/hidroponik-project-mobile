@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/shared_service.dart';
-import '../services/api_service.dart';
-import '../models/message_model.dart';
 import 'login_page.dart';
 import 'register_page.dart';
+import 'messages.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -16,10 +15,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? _userData;
   bool _isLoggedIn = false;
-
-  // state untuk messages
-  List<UserMessage> _messages = [];
-  bool _loadingMessages = false;
 
   // Nature-inspired color palette
   final Color deepGreen = const Color(0xFF1B4332);
@@ -57,25 +52,6 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _isLoggedIn = false;
       });
-    }
-  }
-
-  // load messages
-  Future<void> _loadMessages() async {
-    setState(() => _loadingMessages = true);
-
-    final tokenData = await SharedService.getToken();
-    if (tokenData == null) return;
-
-    try {
-      final list = await ApiService.getUserMessages(tokenData);
-      setState(() {
-        _messages = list;
-        _loadingMessages = false;
-      });
-    } catch (e) {
-      debugPrint("Error fetching messages: $e");
-      setState(() => _loadingMessages = false);
     }
   }
 
@@ -530,9 +506,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.message_rounded,
                 label: 'Messages',
                 color: Colors.amber.shade600,
-                onTap: () async {
-                  await _loadMessages();
-                  _showMessagesModal();
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ClientMessagePage(),
+                    ),
+                  );
                 },
               ),
               _actionCard(
@@ -596,235 +576,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-    );
-  }
-
-  // ======================= MESSAGE MODAL =======================
-  void _showMessagesModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [bgGradientStart, bgGradientEnd],
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              24,
-              24,
-              24,
-              MediaQuery.of(context).viewInsets.bottom + 24,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 45,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Messages",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1B4332),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Notifications from Admin",
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-                const SizedBox(height: 24),
-
-                _loadingMessages
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF2D6A4F),
-                        ),
-                      )
-                    : _messages.isEmpty
-                    ? Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 20,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.inbox_rounded,
-                              color: leafGreen,
-                              size: 48,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            "No messages yet",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "You'll see notifications here",
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      )
-                    : ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.5,
-                        ),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _messages.length,
-                          itemBuilder: (context, i) {
-                            final msg = _messages[i];
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                                border: Border.all(color: Colors.grey.shade100),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: leafGreen.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.admin_panel_settings_rounded,
-                                          color: Color(0xFF2D6A4F),
-                                          size: 18,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        "System Admin",
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF1B4332),
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: leafGreen.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "System",
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: leafGreen,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    msg.message,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Colors.grey.shade800,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    msg.timestamp.toString(),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                const SizedBox(height: 24),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: deepGreen,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Close",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -1070,10 +821,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 2),
               Text(
                 "Tap to open",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),
