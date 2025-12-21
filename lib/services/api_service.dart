@@ -7,7 +7,7 @@ import '../models/sensor_model.dart';
 import '../models/message_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://5bb2534198ba.ngrok-free.app/api';
+  static const String baseUrl = 'http://localhost:5000/api';
 
   static Future<Map<String, dynamic>> register(
     User user,
