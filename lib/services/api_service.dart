@@ -7,7 +7,7 @@ import '../models/sensor_model.dart';
 import '../models/message_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'https://5bb2534198ba.ngrok-free.app/api';
 
   static Future<Map<String, dynamic>> register(
     User user,
@@ -156,7 +156,10 @@ class ApiService {
 
       final response = await http.get(url, headers: _getHeaders(token));
 
-      developer.log('📥 Response Status: ${response.statusCode}', name: 'ApiService');
+      developer.log(
+        '📥 Response Status: ${response.statusCode}',
+        name: 'ApiService',
+      );
       developer.log(
         '📥 Response Body Length: ${response.body.length}',
         name: 'ApiService',
@@ -167,7 +170,10 @@ class ApiService {
 
         if (responseData['success'] == true) {
           final List<dynamic> messagesData = responseData['data'] ?? [];
-          developer.log('✅ Received ${messagesData.length} messages', name: 'ApiService');
+          developer.log(
+            '✅ Received ${messagesData.length} messages',
+            name: 'ApiService',
+          );
 
           final messages = messagesData.map((json) {
             return UserMessage.fromJson(json);
@@ -183,7 +189,10 @@ class ApiService {
           throw Exception(responseData['message'] ?? 'API error');
         }
       } else {
-        developer.log('❌ HTTP Error ${response.statusCode}', name: 'ApiService');
+        developer.log(
+          '❌ HTTP Error ${response.statusCode}',
+          name: 'ApiService',
+        );
         developer.log('❌ Response: ${response.body}', name: 'ApiService');
         throw Exception('HTTP ${response.statusCode}: ${response.body}');
       }
@@ -210,7 +219,10 @@ class ApiService {
         body: jsonEncode({'message': message}),
       );
 
-      developer.log('📤 Response Status: ${response.statusCode}', name: 'ApiService');
+      developer.log(
+        '📤 Response Status: ${response.statusCode}',
+        name: 'ApiService',
+      );
       developer.log('📤 Response Body: ${response.body}', name: 'ApiService');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -229,11 +241,17 @@ class ApiService {
         );
         return success;
       } else {
-        developer.log('❌ HTTP Error ${response.statusCode}', name: 'ApiService');
+        developer.log(
+          '❌ HTTP Error ${response.statusCode}',
+          name: 'ApiService',
+        );
         return false;
       }
     } catch (e) {
-      developer.log('❌ Exception in sendMessageToAdmin: $e', name: 'ApiService');
+      developer.log(
+        '❌ Exception in sendMessageToAdmin: $e',
+        name: 'ApiService',
+      );
       return false;
     }
   }
@@ -241,7 +259,7 @@ class ApiService {
   static Future<bool> deleteUserMessage(String token, int messageId) async {
     try {
       final response = await http.delete(
-        Uri.parse("user/messages/$messageId"),
+        Uri.parse('$baseUrl/user/messages/$messageId'),
         headers: _getHeaders(token),
       );
 
