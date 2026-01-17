@@ -17,7 +17,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'https://7e60c5098efd.ngrok-free.app/api';
 
   int _selectedIndex = 0;
   Timer? _refreshTimer;
@@ -80,7 +80,15 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _loadSensorData() async {
     try {
       final uri = Uri.parse('$baseUrl/get_sensor_data');
-      final res = await http.get(uri);
+      final res = await http.get(
+        uri,
+        headers: {
+          // ← TAMBAHKAN HEADERS INI
+          'ngrok-skip-browser-warning': 'true',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
 
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body)['data'] ?? [];
