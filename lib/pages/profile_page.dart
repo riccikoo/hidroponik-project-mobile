@@ -5,6 +5,7 @@ import 'login_page.dart';
 import 'register_page.dart';
 import 'messages.dart';
 
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
@@ -26,6 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final Color bgGradientEnd = const Color(0xFFE8F4EA);
   final Color glassBg = const Color(0x12FFFFFF);
   final Color cardBg = const Color(0xF0FFFFFF);
+
 
   @override
   void initState() {
@@ -377,8 +379,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileBody() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 380;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -480,14 +484,15 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 24),
 
+          // Action Cards Grid
           GridView(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.5,
+              crossAxisSpacing: isSmallScreen ? 12 : 16,
+              mainAxisSpacing: isSmallScreen ? 12 : 16,
+              childAspectRatio: isSmallScreen ? 1.2 : 1.4,
             ),
             children: [
               _actionCard(
@@ -793,26 +798,26 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(18), // 🔑 dari 20 → 18
+          padding: const EdgeInsets.all(12), // 🔑 dari 20 → 18
           child: Column(
             mainAxisSize: MainAxisSize.min, // 🔥 WAJIB
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10), // dari 12 → 10
+                padding: const EdgeInsets.all(8), // dari 12 → 10
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: color, size: 22),
               ),
-              const SizedBox(height: 12), // dari 16 → 12
+              const SizedBox(height: 8), // dari 16 → 12
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF1B4332),
                   letterSpacing: 0.3,
