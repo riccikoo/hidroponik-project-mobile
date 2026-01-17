@@ -7,7 +7,7 @@ import '../models/sensor_model.dart';
 import '../models/message_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://uncollapsable-overfly-blaine.ngrok-free.dev/api';
+  static const String baseUrl = 'https://7e60c5098efd.ngrok-free.app/api';
 
   static Future<Map<String, dynamic>> register(
     User user,
@@ -91,30 +91,30 @@ class ApiService {
   }
 
   static Future<List<SensorData>> fetchSensorData(String token) async {
-  print("Menggunakan Token: $token");
-  try {
-    final response = await http.get(
-      Uri.parse('$baseUrl/get_sensor_data'),
-      headers: _getHeaders(token),
-    );
+    print("Menggunakan Token: $token");
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/get_sensor_data'),
+        headers: _getHeaders(token),
+      );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      // Cek apakah key 'data' ada
-      if (body.containsKey('data')) {
-        final List data = body['data'];
-        return data.map((e) => SensorData.fromJson(e)).toList();
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        // Cek apakah key 'data' ada
+        if (body.containsKey('data')) {
+          final List data = body['data'];
+          return data.map((e) => SensorData.fromJson(e)).toList();
+        }
+        return [];
+      } else {
+        print('Server Error: ${response.statusCode} - ${response.body}');
+        return [];
       }
-      return [];
-    } else {
-      print('Server Error: ${response.statusCode} - ${response.body}');
+    } catch (e) {
+      print('Error Fetching: $e');
       return [];
     }
-  } catch (e) {
-    print('Error Fetching: $e');
-    return [];
   }
-}
 
   static Future<Map<String, dynamic>> controlActuator(
     String name,
